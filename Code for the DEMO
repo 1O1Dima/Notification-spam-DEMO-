@@ -1,0 +1,58 @@
+import UIKit
+import UserNotifications
+
+class ViewController: UIViewController, UNUserNotificationCenterDelegate {
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        
+        // Request permission to send notifications when the app launches
+        requestNotificationPermission()
+
+        // Schedule notifications every 10 seconds
+        sendNotificationsEveryTenSeconds()
+    }
+    
+    // Function to request permission to send notifications
+    func requestNotificationPermission() {
+        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .badge, .sound]) { (granted, error) in
+            if granted {
+                print("Notification permission granted.")
+            } else {
+                print("Notification permission denied.")
+            }
+        }
+        
+        // Set the delegate to handle notifications while app is in the foreground
+        UNUserNotificationCenter.current().delegate = self
+    }
+
+    // Function to schedule notifications every 10 seconds
+    func sendNotificationsEveryTenSeconds() {
+        let content = UNMutableNotificationContent()
+        content.title = "Security Alert"
+        content.body = "You got hacked!"
+        content.sound = .default
+        
+        // Trigger notification every 10 seconds
+        let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 10, repeats: true)
+        
+        // Create a unique identifier for each notification
+        let request = UNNotificationRequest(identifier: UUID().uuidString, content: content, trigger: trigger)
+        
+        // Add the notification request to the notification center
+        UNUserNotificationCenter.current().add(request) { (error) in
+            if let error = error {
+                print("Error scheduling notification: \(error.localizedDescription)")
+            } else {
+                print("Notification scheduled.")
+            }
+        }
+    }
+    
+    // Handle foreground notifications (iOS doesn't display notifications when the app is in the foreground by default)
+    func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification) async -> UNNotificationPresentationOptions {
+        // Show notification even when app is in the foreground
+        return [.alert, .sound]
+    }
+}
